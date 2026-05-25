@@ -4,7 +4,7 @@ Projeto de **ETL (Extract, Transform, Load)** sobre dados do e-commerce brasilei
 
 > **Trabalho acadêmico** | UNASP SP — Análise e Desenvolvimento de Sistemas
 > **Autor:** José Artur Silva Brito ([@ArturJasb](https://github.com/ArturJasb))
-
+**Autor:** Iale Moreira dos Santos https://github.com/ialemoreira-hub
 ---
 
 ## 🎯 Sobre o projeto
