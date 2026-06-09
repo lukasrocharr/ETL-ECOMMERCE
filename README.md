@@ -25,11 +25,6 @@ negócio reais.
 > **Tema:** E-commerce — Funil de Conversão e Comportamento do Consumidor
 > **Dataset:** Kaggle — *eCommerce behavior data from multi category store*
 
-### Perguntas de negócio que o projeto responde
-1. 📊 **Qual a taxa de conversão** (visualização → carrinho → compra) por categoria?
-2. ⏰ **Quais os horários de pico de abandono** de carrinho?
-3. 💰 **Qual o faturamento (LTV / ticket médio)** das marcas mais vistas × mais compradas?
-
 ---
 
 ## 🇧🇷 Análise Olist — 10 Perguntas de Negócio

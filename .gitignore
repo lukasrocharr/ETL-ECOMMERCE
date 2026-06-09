@@ -2,5 +2,10 @@
 *.csv
 /data/
 
+# python (projeto usa apenas SQL Server / T-SQL)
+*.py
+.venv/
+__pycache__/
+
 # sistema
 .DS_Store
