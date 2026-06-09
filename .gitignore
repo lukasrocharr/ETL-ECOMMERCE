@@ -1,0 +1,6 @@
+# dados brutos do Kaggle (grandes, não versionar)
+*.csv
+/data/
+
+# sistema
+.DS_Store
