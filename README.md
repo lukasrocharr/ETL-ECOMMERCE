@@ -32,6 +32,32 @@ negócio reais.
 
 ---
 
+## 🇧🇷 Análise Olist — 10 Perguntas de Negócio
+
+Além do DW de eventos, o repositório traz a análise do dataset **Olist (Brazilian
+E-Commerce)** — ~100 mil pedidos reais (2016–2018) carregados em SQL Server e
+respondidos com T-SQL (`analise_olist/`). As 10 perguntas e suas respostas:
+
+| # | Pergunta de negócio | Resposta (resumo) |
+|---|---------------------|-------------------|
+| 1 | Qual forma de pagamento é mais usada? | **Cartão de crédito** — 73,9% das transações |
+| 2 | Qual a taxa de recompra dos clientes? | Apenas **3,12%** — base quase toda de compra única |
+| 3 | Quais estados têm mais clientes ativos? | **SP** (40.302), seguido de RJ e MG |
+| 4 | Quais meses têm maior volume de vendas? | Pico em **nov/2017** (Black Friday) |
+| 5 | Quais categorias foram mais vendidas? | `bed_bath_table` (volume) e `health_beauty` (receita) |
+| 6 | Qual o crescimento MoM de vendas? | Alta forte em 2017; estabiliza em ~R$ 1 mi/mês em 2018 |
+| 7 | Qual o tempo médio de entrega? | **~12,5 dias**; 93,2% no prazo |
+| 8 | Quais os maiores motivos de cancelamento? | Sem campo de "motivo"; `canceled`+`unavailable` ≈ ruptura |
+| 9 | Quais vendedores têm mais receita? | Top seller (Guariba/SP): **R$ 229 mil**; SP domina |
+| 10 | Qual a satisfação dos clientes? | Nota média **4,09/5**; 77% satisfeitos, 14,7% insatisfeitos |
+
+📂 **Artefatos:** [`analise_olist/01_perguntas.sql`](analise_olist/01_perguntas.sql) ·
+[respostas completas](analise_olist/RESPOSTAS.md) ·
+[`Analise_Olist.xlsx`](analise_olist/Analise_Olist.xlsx) ·
+[`Apresentacao_Olist.pptx`](analise_olist/Apresentacao_Olist.pptx)
+
+---
+
 ## 🚀 Começando em 2 passos
 
 > Você **não** precisa instalar o SQL Server. Só precisa de **Docker**.
