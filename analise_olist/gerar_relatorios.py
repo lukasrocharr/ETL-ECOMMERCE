@@ -415,7 +415,7 @@ txt(s, Inches(0.8), Inches(3.1), Inches(11.7), Inches(0.5),
 bullets(s, Inches(0.85), Inches(3.9), Inches(11.5), Inches(2.5), [
     "**Equipe (Arquiteto de Dados, Engenheiro de Dados, Analista de Dados):** [preencher integrantes]",
     "**Repositório:** github.com/lukasrocharr/ETL-ECOMMERCE",
-    "**Volume analisado:** ~100 mil pedidos · 8 tabelas · {:,} registros".format(TOTAL_REGISTROS).replace(",", "."),
+    "**Volume analisado:** ~100 mil pedidos · modelo estrela de 20 tabelas (8 staging + 8 dim + 4 fato)",
     "**Data:** " + date.today().strftime("%d/%m/%Y"),
 ], size=16)
 
@@ -439,8 +439,9 @@ bullets(s, Inches(0.7), Inches(1.9), Inches(6.6), Inches(5), [
     (1, "concentração geográfica para decisões de negócio."),
     "**Objetivo:** transformar dados brutos (CSV) em insights",
     (1, "acionáveis usando exclusivamente T-SQL."),
-    "**Volumetria:** mais de meio milhão de registros somando",
-    (1, "as 8 tabelas (geolocation adicional ~1 milhão de linhas)."),
+    "**Modelo:** 8 CSV brutos → modelo estrela de **20 tabelas**.",
+    "**Volumetria:** +500 mil registros; maior fato (itens de",
+    (1, "pedido) com 112.650 linhas."),
 ], size=16)
 # tabela volumetria
 rows = VOLUMETRIA[:6]
@@ -460,33 +461,77 @@ col2 = [f"{i+1}. {PERGUNTAS[i]}" for i in range(5, 10)]
 bullets(s, Inches(0.7), Inches(2.0), Inches(6.2), Inches(5), col1, size=16, space=14)
 bullets(s, Inches(7.0), Inches(2.0), Inches(6.0), Inches(5), col2, size=16, space=14)
 
-# ---------- Slide 5: Modelagem e Arquitetura ----------
-s = add_slide(); cabecalho(s, "Modelo de Dados e Decisões", "Etapa 2 — Modelagem e Arquitetura")
-bullets(s, Inches(0.7), Inches(1.9), Inches(6.7), Inches(5), [
-    "**Entidades centrais:** orders (pedidos) e order_items (itens).",
-    "**Dimensões:** products, sellers, customers, category_translation.",
-    "**Eventos/transações:** payments, reviews.",
-    "**Tipos & integridade:** carga em staging textual e conversão",
-    (1, "segura com TRY_CONVERT (datas, decimais e inteiros)."),
-    "**Índices/chaves:** order_id e product_id conectam as tabelas;",
-    (1, "joins entre até 4 tabelas nas consultas analíticas."),
-    "**Governança:** ambiente SQL Server 2022 isolado em Docker;",
-    (1, "scripts versionados e reexecutáveis (idempotentes)."),
-], size=15)
-# mini esquema
-box = s.shapes.add_shape(1, Inches(7.8), Inches(2.0), Inches(4.8), Inches(4.2))
-box.fill.solid(); box.fill.fore_color.rgb = C_BRANCO; box.line.color.rgb = C_AZUL2; box.shadow.inherit = False
-txt(s, Inches(7.8), Inches(2.1), Inches(4.8), Inches(0.5), "Relacionamentos (simplificado)",
-    size=13, bold=True, color=C_AZUL, align=PP_ALIGN.CENTER)
-bullets(s, Inches(8.05), Inches(2.7), Inches(4.4), Inches(3.4), [
-    "customers → orders  (1:N)",
-    "orders → order_items (1:N)",
-    "order_items → products (N:1)",
-    "order_items → sellers (N:1)",
-    "orders → payments (1:N)",
-    "orders → reviews (1:1)",
-    "products → category_translation (N:1)",
-], size=14, space=10)
+# ---------- Slide 5: Modelo Dimensional — 20 tabelas ----------
+STAGING = ["raw_orders — 99.441", "raw_order_items — 112.650", "raw_payments — 103.886",
+           "raw_reviews — 99.224", "raw_products — 32.951", "raw_customers — 99.441",
+           "raw_sellers — 3.095", "raw_cat_translation — 71"]
+DIMS = ["dim_tempo — 1.096", "dim_cliente — 96.096", "dim_produto — 32.951",
+        "dim_categoria — 73", "dim_vendedor — 3.095", "dim_status_pedido — 8",
+        "dim_forma_pagamento — 5", "dim_avaliacao — 5"]
+FATOS = ["fato_pedido — 99.441", "fato_item_pedido — 112.650 ★",
+         "fato_pagamento — 103.886", "fato_avaliacao — 99.224"]
+
+MAPA = [
+    ("1. Forma de pagamento mais usada", "fato_pagamento + dim_forma_pagamento"),
+    ("2. Taxa de recompra", "fato_pedido + dim_cliente"),
+    ("3. Estados com mais clientes", "dim_cliente + fato_pedido"),
+    ("4. Meses de maior venda", "fato_item_pedido + dim_tempo"),
+    ("5. Categorias mais vendidas", "fato_item_pedido + dim_produto + dim_categoria"),
+    ("6. Crescimento MoM", "fato_item_pedido + dim_tempo"),
+    ("7. Tempo médio de entrega", "fato_pedido + dim_tempo"),
+    ("8. Motivos de cancelamento", "fato_pedido + dim_status_pedido"),
+    ("9. Vendedores com mais receita", "fato_item_pedido + dim_vendedor"),
+    ("10. Satisfação dos clientes", "fato_avaliacao + dim_avaliacao"),
+]
+
+
+def grupo_tabelas(slide, x, y, w, titulo, cor, itens):
+    hb = slide.shapes.add_shape(1, x, y, w, Inches(0.45))
+    hb.fill.solid(); hb.fill.fore_color.rgb = cor; hb.line.fill.background(); hb.shadow.inherit = False
+    p = hb.text_frame.paragraphs[0]; p.alignment = PP_ALIGN.CENTER
+    r = p.add_run(); r.text = titulo; r.font.bold = True; r.font.size = Pt(13); r.font.color.rgb = C_BRANCO
+    bh = Inches(0.34 * len(itens) + 0.25)
+    bb = slide.shapes.add_shape(1, x, y + Inches(0.48), w, bh)
+    bb.fill.solid(); bb.fill.fore_color.rgb = C_BRANCO; bb.line.color.rgb = cor
+    bb.line.width = Pt(1.5); bb.shadow.inherit = False
+    tbx = slide.shapes.add_textbox(x + Inches(0.12), y + Inches(0.56), w - Inches(0.24), bh)
+    tf = tbx.text_frame; tf.word_wrap = True
+    for i, it in enumerate(itens):
+        p = tf.paragraphs[0] if i == 0 else tf.add_paragraph()
+        p.space_after = Pt(4)
+        r = p.add_run(); r.text = "•  " + it; r.font.size = Pt(11.5); r.font.color.rgb = C_CINZA
+
+s = add_slide(); cabecalho(s, "Modelo Dimensional — 20 Tabelas (Estrela)", "Etapa 2 — Modelagem e Arquitetura")
+grupo_tabelas(s, Inches(0.55), Inches(1.85), Inches(4.15), "STAGING (8)", C_CINZA, STAGING)
+grupo_tabelas(s, Inches(4.85), Inches(1.85), Inches(4.15), "DIMENSÕES (8)", C_AZUL2, DIMS)
+grupo_tabelas(s, Inches(9.15), Inches(1.85), Inches(3.6), "FATOS (4)", C_ACENTO, FATOS)
+txt(s, Inches(9.15), Inches(4.05), Inches(3.6), Inches(2.6),
+    "Decisões de modelagem:\n"
+    "• Surrogate keys (IDENTITY) nas dimensões.\n"
+    "• Integridade por PK/FK/UNIQUE/CHECK.\n"
+    "• Tipagem segura via TRY_CONVERT.\n"
+    "• ETL transacional e idempotente.\n"
+    "• ★ maior fato: itens de pedido.",
+    size=12, color=C_CINZA)
+
+# ---------- Slide 6: 20 tabelas x 10 perguntas ----------
+s = add_slide(); cabecalho(s, "As 20 Tabelas a Serviço das 10 Perguntas", "Etapa 2 — Modelagem e Arquitetura")
+tb = s.shapes.add_table(len(MAPA) + 1, 2, Inches(0.6), Inches(1.8), Inches(12.1), Inches(5.2)).table
+tb.columns[0].width = Inches(5.3); tb.columns[1].width = Inches(6.8)
+tb.cell(0, 0).text = "Pergunta de negócio"; tb.cell(0, 1).text = "Tabelas do modelo utilizadas"
+for j in range(2):
+    c = tb.cell(0, j); c.fill.solid(); c.fill.fore_color.rgb = C_AZUL
+    rp = c.text_frame.paragraphs[0].runs[0]; rp.font.color.rgb = C_BRANCO; rp.font.bold = True; rp.font.size = Pt(13)
+for i, (perg, tabs) in enumerate(MAPA, start=1):
+    tb.cell(i, 0).text = perg; tb.cell(i, 1).text = tabs
+    for j in range(2):
+        c = tb.cell(i, j)
+        if i % 2 == 0:
+            c.fill.solid(); c.fill.fore_color.rgb = RGBColor(0xEE, 0xF3, 0xFB)
+        run = c.text_frame.paragraphs[0].runs[0]
+        run.font.size = Pt(12); run.font.color.rgb = C_CINZA
+        if j == 1:
+            run.font.name = "Consolas"
 
 # ---------- Slide 6: ETL ----------
 s = add_slide(); cabecalho(s, "Pipeline de ETL e Tratamento de Dados", "Etapa 3 — Engenharia de Dados e ETL")
